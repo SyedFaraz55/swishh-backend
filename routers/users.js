@@ -3,7 +3,7 @@ const { ValidateUser, User } = require("../Schema/UserSchema");
 const router = express.Router();
 
 router.post("/all", async (req, res) => {
-  const users = await User.findOne({user:"mohi"});
+  const users = await User.findOne({user:req.body.user});
   if(users) {
 
   return res.status(200).json(users);
