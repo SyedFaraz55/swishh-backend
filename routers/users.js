@@ -2,8 +2,8 @@ const express = require("express");
 const { ValidateUser, User } = require("../Schema/UserSchema");
 const router = express.Router();
 
-router.get("/all", async (req, res) => {
-  const users = await User.find({});
+router.post("/all", async (req, res) => {
+  const users = await User.find({user:"mohi"});
   return res.status(200).json(users);
 });
 
