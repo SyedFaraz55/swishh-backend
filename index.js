@@ -6,9 +6,11 @@ const users = require("./routers/users");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { default: mongoose } = require("mongoose");
-
+const fileUpload = require("express-fileupload");
+const { DefectMenu } = require("./Schema/DefectMenuSchema");
 const PORT = process.env.PORT || 5000;
 const app = express();
+app.use(fileUpload());
 
 app.use(morgan("tiny"));
 app.use(cors());
@@ -26,5 +28,12 @@ mongoose
 
 app.use("/api/movies", movies);
 app.use("/api/users", users);
+
+app.get("/menu",async(req,res)=> {
+    const rec = new DefectMenu(req.params.text);
+    rec.save();
+    return res.status(200).json({ ok: true });
+  
+})
 
 app.listen(PORT, () => console.log(`@server running at port ${PORT}`));
