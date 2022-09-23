@@ -4,9 +4,11 @@ const { DefectMenu } = require("../Schema/DefectMenuSchema");
 const { OTP } = require("../Schema/Otp");
 const { ValidateUser, User } = require("../Schema/UserSchema");
 const router = express.Router();
-const Razorpay = require("razorpay")
+const Razorpay = require("razorpay");
+const { Category } = require("../Schema/Category");
 const accountSid = process.env.SSID;
 const authToken = process.env.AUTH_TOKEN;
+const s3 =  require("../s3")
 const client = require("twilio")(accountSid, authToken);
 var razor = new Razorpay({
   key_id: "rzp_test_qxsRuZfigMmu3O",
@@ -120,14 +122,12 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
-
 router.get("/product/:id", async (req, res) => {
   const product = await Product.findById(req.params.id);
   res.json(product);
 });
 
 router.post("/razorpay", async (req, res) => {
-
   try {
     const result = await razor.orders.create({
       amount: 50000,
@@ -135,14 +135,31 @@ router.post("/razorpay", async (req, res) => {
       receipt: "receipt#1",
       notes: {
         key1: "value3",
-        key2: "value2"
-      }
-    }) 
-    console.log(result)
-    return res.json({ok:true,result})
-  } catch(err) {
-    console.log(err)
+        key2: "value2",
+      },
+    });
+    console.log(result);
+    return res.json({ ok: true, result });
+  } catch (err) {
+    console.log(err);
   }
 });
+
+router.post("/add-category", async (req, res) => {
+  console.log(req.body);
+  try {
+    const category = await new Category(req.body);
+    category.save();
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return res.status(400).json({ ok: false });
+  }
+});
+
+router.get("/s3url", async (req, res) => {
+  const url = await s3.generateUploadURL();
+  res.send({ url });
+});
+
 
 module.exports = router;
