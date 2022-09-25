@@ -1,0 +1,12 @@
+{
+  "name":"White Honey",
+  "image":"https://natmarts.s3.ap-south-1.amazonaws.com/983f92d4069cba0b723b9285a05a6050",
+  "basePrice":"500",
+  "description":"Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+  "benefits":["benefits1","benefits2","benefits3"],
+  "variants":[{"variant":"500gm","price":"600"},{"variant":"300gm","price":"250"}],
+  "discountedPrice":"700",
+  "price":"100",
+  "reviews":[],
+  "category":"fruits"
+}

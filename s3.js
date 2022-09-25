@@ -1,4 +1,5 @@
 require("dotenv").config();
+const fs = require('fs')
 const aws = require('aws-sdk')
 const crypto = require('crypto')
 const {promisify} =  require('util')
@@ -28,4 +29,16 @@ module.exports.generateUploadURL =async  ()=> {
 
     const url =  await s3.getSignedUrlPromise('putObject',params) 
     return url
+}
+
+module.exports.uploadFile = file => {
+    const fileStream = fs.createReadStream(file.path)
+
+    const params = {
+        Bucket:bucketName,
+        Body:fileStream,
+        Key:file.filename
+    }
+
+    return s3.upload(params).promise()
 }
