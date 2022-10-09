@@ -17,6 +17,8 @@ const { Product } = require("../Schema/ProductSchema");
 const { Promotions } = require("../Schema/Promotions");
 const shortid = require("shortid");
 const { Order } = require("../Schema/OrderSchema");
+const { Vendor } = require("../Schema/VendorSchema");
+const { Action } = require("../Schema/ActionSchema");
 const upload = multer({ dest: "uploads/" });
 var razor = new Razorpay({
   key_id: "rzp_test_qxsRuZfigMmu3O",
@@ -144,7 +146,7 @@ router.post("/razorpay", async (req, res) => {
       receipt: shortid.generate(),
     });
     console.log(result, "result");
-    return res.json({ ok: true, ...result, order, user,cartTotal:amount });
+    return res.json({ ok: true, ...result, order, user, cartTotal: amount });
   } catch (err) {
     console.log(err);
   }
@@ -165,6 +167,18 @@ router.post("/get-orders", async (req, res) => {
   const orders = await Order.find({ user: req.body.mobile });
   return res.status(200).json(orders);
 });
+
+router.post("/getall-orders", async (req, res) => {
+  const orders = await Order.find({ });
+  return res.status(200).json(orders);
+});
+
+router.get("/get-vendors", async (req, res) => {
+  const vendors = await Vendor.find({ });
+  return res.status(200).json(vendors);
+});
+
+
 
 router.post("/add-category", async (req, res) => {
   console.log(req.body);
@@ -197,6 +211,23 @@ router.post("/s3url", upload.single("file"), async (req, res) => {
   }
 });
 
+router.post("/upload-action-files", upload.array("file",2), async (req, res) => {
+  console.log(req.files);
+  let rest = [];
+  for(let i= 0; i<req.files.length; i++) {
+    try {
+      const s = await uploadFile(req.files[i]);
+      rest.push(s.Location);
+    } catch (err) {
+      return res.json({ok:false});
+    }
+  }
+
+  return res.json({ok:true,data:rest})
+  
+});
+
+
 router.post("/add-product", async (req, res) => {
   console.log(req.body);
 
@@ -214,6 +245,26 @@ router.post("/add-product", async (req, res) => {
   }
 });
 
+
+// add action
+
+router.post("/add-action", async (req, res) => {
+  console.log(req.body);
+
+  try {
+    const action = new Action(req.body);
+    await action.save();
+
+    return res
+      .status(200)
+      .json({ ok: true, message: "Action Added Successfull" });
+  } catch (error) {
+    return res
+      .status(200)
+      .json({ ok: false, message: "Failed to add action" });
+  }
+});
+
 router.get("/get-categories", async (req, res) => {
   const results = await Category.find({});
   return res
@@ -226,6 +277,29 @@ router.get("/get-products", async (req, res) => {
   return res
     .status(200)
     .json({ ok: true, data: results.length > 0 ? results : [] });
+});
+
+router.post("/add-vendor", async (req, res) => {
+  try {
+    const vendor = await new Vendor({ ...req.body, active: false });
+    vendor.save();
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    return res.status(400).json({ ok: false });
+  }
+});
+
+router.post("/login-vendor", async (req, res) => {
+  const result = await Vendor.findOne({ mobile: req.body.mobile });
+  if (result) {
+    if (result.password === req.body.password) {
+      return res.status(200).send({ ok: true, result });
+    } else {
+      return res.status(200).send({ ok: false });
+    }
+  } else {
+    return res.status(200).json({ ok: false });
+  }
 });
 
 module.exports = router;
