@@ -2,10 +2,34 @@ const Joi = require("joi");
 const mongoose = require("mongoose");
 
 const DefectMenuSchema = new mongoose.Schema({
-  text: {
+  name: {
     type: String,
-    maxLength: 1024,
-  }
+  },
+  image: {
+    type: String,
+  },
+  page: {
+    type: Boolean,
+  },
+  informative: {
+    type: Boolean,
+  },
+  title:{
+    type:String,
+  },
+  titleText:{
+    type:String,
+  } ,
+  target:{
+    type:String,
+  } ,
+  question:{
+    type:String,
+  } ,
+  description:{
+    type:String,
+  } 
+
 });
 
 // const ValidateUser = (payload) => {

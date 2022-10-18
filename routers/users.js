@@ -34,6 +34,14 @@ router.post("/all", async (req, res) => {
   }
 });
 
+router.get("/get-all", async (req, res) => {
+  const users = await User.find({});
+  
+  
+    return res.status(200).json(users);
+
+});
+
 router.post("/add-user", (req, res) => {
   const { error } = ValidateUser(req.body);
   if (error) return res.status(400).json(error.details[0].message);
@@ -50,10 +58,9 @@ router.post("/upload-file", async (req, res) => {
   console.log(req.files);
 });
 
-router.get("/menu/:text", async (req, res) => {
-  console.log(req.params.text);
+router.post("/menu", async (req, res) => {
   try {
-    const rec = new DefectMenu({ text: req.params.text });
+    const rec = new DefectMenu(req.body);
     rec.save();
     return res.status(200).json({ ok: true });
   } catch (error) {
@@ -61,10 +68,9 @@ router.get("/menu/:text", async (req, res) => {
   }
 });
 
-router.get("/menuget", async (req, res) => {
-  const all = await DefectMenu.find();
-  console.log(all);
-  return res.status(200).json({ data: all });
+router.get("/get-menu", async (req, res) => {
+  const all = await DefectMenu.find({});
+  return res.send(all)
 });
 
 router.put("/update", async (req, res) => {
@@ -264,6 +270,23 @@ router.post("/add-action", async (req, res) => {
       .json({ ok: false, message: "Failed to add action" });
   }
 });
+
+router.post("/delete-action",async(req,res)=> {
+  console.log(req.body)
+  try {
+    const actionDelete = await Action.deleteOne({_id:req.body.id});
+    if(actionDelete.deletedCount> 0 || actionDelete.acknowledged ) {
+      return res.status(200).json({ok:true,message:"Action Deleted"})
+    }
+  } catch(err) {
+    return res.status(400).json({ok:false,err})
+  }
+})
+
+router.get("/get-action",async (req,res)=> {
+  const actions = await Action.find({});
+  return res.status(200).json(actions);
+})
 
 router.get("/get-categories", async (req, res) => {
   const results = await Category.find({});
