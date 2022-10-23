@@ -6,7 +6,7 @@ const users = require("./routers/users");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { default: mongoose } = require("mongoose");
-const { DefectMenu } = require("./Schema/DefectMenuSchema");
+const { Category } = require("./Schema/Category");
 const PORT = process.env.PORT || 5000;
 const app = express();
 
@@ -35,5 +35,7 @@ app.get("/menu", async (req, res) => {
   rec.save();
   return res.status(200).json({ ok: true });
 });
+
+
 
 app.listen(PORT, () => console.log(`@server running at port ${PORT}`));

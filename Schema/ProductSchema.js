@@ -8,6 +8,7 @@ const ProductSchema = new mongoose.Schema({
   discountPrice: { type: String, required: true },
   category: { },
   stock: { type: String },
+  variants:[{}]
 });
 
 // const validateUser = (user) => {
