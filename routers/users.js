@@ -139,7 +139,7 @@ router.post("/add-promotions", async (req, res) => {
 });
 
 router.post("/s3url", upload.single("file"), async (req, res) => {
-  console.log(req.files);
+  console.log(req.file);
   try {
     const s = await uploadFile(req.file);
     return res.send({ url: s.Location });

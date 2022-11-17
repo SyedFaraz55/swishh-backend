@@ -2,7 +2,7 @@ const Joi = require("joi");
 const mongoose = require("mongoose");
 
 const VendorSchema = new mongoose.Schema({
-    active:{type:Boolean},
+  active: { type: Boolean },
   name: {
     type: String,
     minLength: 4,
@@ -25,7 +25,19 @@ const VendorSchema = new mongoose.Schema({
   registerId: {
     type: String,
   },
-  mobile:{type:String}
+  mobile: { type: String },
+  latitude: { type: String },
+  longitude: { type: String },
+  address: { type: String },
+  gst: { type: String },
+  aadhar: { type: String },
+  pan: { type: String },
+  panNumber: { type: String },
+  bank: { type: String },
+  ifsc: { type: String },
+  accName: { type: String },
+  branch: { type: String },
+  accNo: { type: String },
 });
 
 const Vendor = mongoose.model("vendor.app.users", VendorSchema);

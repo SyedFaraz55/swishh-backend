@@ -40,5 +40,7 @@ module.exports.uploadFile = file => {
         Key:file.filename
     }
 
+
+
     return s3.upload(params).promise()
 }
