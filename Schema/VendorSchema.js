@@ -39,6 +39,7 @@ const VendorSchema = new mongoose.Schema({
   accName: { type: String },
   branch: { type: String },
   accNo: { type: String },
+  accepted:{type:Boolean,default:false}
 });
 
 const Vendor = mongoose.model("vendor.app.users", VendorSchema);

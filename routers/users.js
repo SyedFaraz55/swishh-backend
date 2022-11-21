@@ -24,8 +24,13 @@ var razor = new Razorpay({
 
 router.get("/get-all", async (req, res) => {
   const users = await User.find({});
-
   return res.status(200).json(users);
+});
+
+router.get("/health", async (req, res) => {
+  return res
+    .status(200)
+    .json({ ok: true, message: "server is up and running..." });
 });
 
 router.post("/send-otp", async (req, res) => {
@@ -220,8 +225,85 @@ router.post("/add-vendor", async (req, res) => {
 });
 
 router.post("/activate-vendor", async (req, res) => {
-  const vendor = await Vendor.findOneAndUpdate({ _id:req.body.id });
-  console.log(vendor);
+  const vendor = await Vendor.updateOne(
+    { _id: req.body.id },
+    {
+      $set: {
+        active: req.body.payload,
+      },
+    }
+  );
+  if (vendor.matchedCount > 0 || vendor.acknowledged) {
+    return res.status(200).json({ ok: true, message: "Status Changed" });
+  } else {
+    return res
+      .status(200)
+      .json({ ok: false, message: "Failed to change status" });
+  }
+});
+
+router.post("/add-promotion", async (req, res) => {
+  try {
+    const result = new Promotions(req.body);
+    result.save();
+    return res.status(200).json({ ok: true, message: "Promotion added" });
+  } catch (err) {
+    return res.status(200).json({ ok: false, message: "Something went wrong" });
+  }
+});
+
+router.get("/promotions", async (req, res) => {
+  try {
+    const result = await Promotions.find({});
+    return res
+      .status(200)
+      .json({ ok: true, message: "Promotion added", data: result });
+  } catch (err) {
+    return res.status(200).json({ ok: false, message: "Something went wrong" });
+  }
+});
+
+router.post("/delete-promotion", async (req, res) => {
+  const promo = await Promotions.deleteOne({ _id: req.body.id });
+
+  if (promo.deletedCount > 0) {
+    return res.status(200).json({ ok: true, message: "Promotion Deleted" });
+  } else {
+    return res
+      .status(200)
+      .json({ ok: false, message: "Failed to delete Promotion" });
+  }
+});
+
+router.post("/delete-vendor", async (req, res) => {
+  const vendor = await Vendor.deleteOne({ _id: req.body.id });
+
+  if (vendor.deletedCount > 0) {
+    return res.status(200).json({ ok: true, message: "Vendor Deleted" });
+  } else {
+    return res
+      .status(200)
+      .json({ ok: false, message: "Failed to delete vendor" });
+  }
+});
+
+router.post("/vendor-action", async (req, res) => {
+  const vendor = await Vendor.updateOne(
+    { _id: req.body.id },
+    {
+      $set: {
+        accepted: req.body.payload,
+        active: req.body.payload ? true : false,
+      },
+    }
+  );
+  if (vendor.matchedCount > 0 || vendor.acknowledged) {
+    return res.status(200).json({ ok: true, message: "Status Changed" });
+  } else {
+    return res
+      .status(200)
+      .json({ ok: false, message: "Failed to change status" });
+  }
 });
 
 router.post("/login-vendor", async (req, res) => {
