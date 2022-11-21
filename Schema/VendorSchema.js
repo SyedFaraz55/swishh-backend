@@ -29,6 +29,7 @@ const VendorSchema = new mongoose.Schema({
   latitude: { type: String },
   longitude: { type: String },
   address: { type: String },
+  lname:{type:String},
   gst: { type: String },
   aadhar: { type: String },
   pan: { type: String },

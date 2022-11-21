@@ -22,14 +22,11 @@ var razor = new Razorpay({
   key_secret: "GyT6kJjJfDSt4b318RN56JTP",
 });
 
-
 router.get("/get-all", async (req, res) => {
   const users = await User.find({});
-  
-    return res.status(200).json(users);
 
+  return res.status(200).json(users);
 });
-
 
 router.post("/send-otp", async (req, res) => {
   await OTP.deleteOne({ mobile: req.body.mobile });
@@ -106,16 +103,14 @@ router.post("/get-orders", async (req, res) => {
 });
 
 router.post("/getall-orders", async (req, res) => {
-  const orders = await Order.find({ });
+  const orders = await Order.find({});
   return res.status(200).json(orders);
 });
 
 router.get("/get-vendors", async (req, res) => {
-  const vendors = await Vendor.find({ });
+  const vendors = await Vendor.find({});
   return res.status(200).json(vendors);
 });
-
-
 
 router.post("/add-category", async (req, res) => {
   console.log(req.body);
@@ -148,22 +143,24 @@ router.post("/s3url", upload.single("file"), async (req, res) => {
   }
 });
 
-router.post("/upload-action-files", upload.array("file",2), async (req, res) => {
-  console.log(req.files);
-  let rest = [];
-  for(let i= 0; i<req.files.length; i++) {
-    try {
-      const s = await uploadFile(req.files[i]);
-      rest.push(s.Location);
-    } catch (err) {
-      return res.json({ok:false});
+router.post(
+  "/upload-action-files",
+  upload.array("file", 2),
+  async (req, res) => {
+    console.log(req.files);
+    let rest = [];
+    for (let i = 0; i < req.files.length; i++) {
+      try {
+        const s = await uploadFile(req.files[i]);
+        rest.push(s.Location);
+      } catch (err) {
+        return res.json({ ok: false });
+      }
     }
+
+    return res.json({ ok: true, data: rest });
   }
-
-  return res.json({ok:true,data:rest})
-  
-});
-
+);
 
 router.post("/add-product", async (req, res) => {
   console.log(req.body);
@@ -182,11 +179,11 @@ router.post("/add-product", async (req, res) => {
   }
 });
 
-router.post("/remove-product",async(req,res)=> {
-  const results = await Product.deleteOne({_id:req.body.id})
-  console.log(results)
-  return res.status(200).json({ok:true})
-})
+router.post("/remove-product", async (req, res) => {
+  const results = await Product.deleteOne({ _id: req.body.id });
+  console.log(results);
+  return res.status(200).json({ ok: true });
+});
 
 router.get("/get-categories", async (req, res) => {
   const results = await Category.find({});
@@ -195,12 +192,11 @@ router.get("/get-categories", async (req, res) => {
     .json({ ok: true, data: results.length > 0 ? results : [] });
 });
 
-router.post("/delete-menu",async(req,res)=> {
-  const result = await Category.deleteOne({_id:req.body.id})
-  console.log(result)
- if(result) 
-  return res.json({ok:true})
-})
+router.post("/delete-menu", async (req, res) => {
+  const result = await Category.deleteOne({ _id: req.body.id });
+  console.log(result);
+  if (result) return res.json({ ok: true });
+});
 
 router.get("/get-products", async (req, res) => {
   const results = await Product.find({});
@@ -210,6 +206,10 @@ router.get("/get-products", async (req, res) => {
 });
 
 router.post("/add-vendor", async (req, res) => {
+  // const vdr = await Vendor.find({ mobile: req.body.mobile });
+  // if (vdr)
+  //   return res.send(200).json({ ok: false, message: "Vendor already exits" });
+
   try {
     const vendor = await new Vendor({ ...req.body, active: false });
     vendor.save();
@@ -217,6 +217,11 @@ router.post("/add-vendor", async (req, res) => {
   } catch (err) {
     return res.status(400).json({ ok: false });
   }
+});
+
+router.post("/activate-vendor", async (req, res) => {
+  const vendor = await Vendor.findOneAndUpdate({ _id:req.body.id });
+  console.log(vendor);
 });
 
 router.post("/login-vendor", async (req, res) => {
