@@ -10,12 +10,12 @@ const s3 = require("../s3");
 const { uploadFile } = require("../s3");
 const axios = require("axios");
 const client = require("twilio")(accountSid, authToken);
-const multer = require("multer");
 const { Product } = require("../Schema/ProductSchema");
 const { Promotions } = require("../Schema/Promotions");
 const shortid = require("shortid");
 const { Order } = require("../Schema/OrderSchema");
 const { Vendor } = require("../Schema/VendorSchema");
+const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 var razor = new Razorpay({
   key_id: "rzp_test_qxsRuZfigMmu3O",
