@@ -2,20 +2,11 @@ const Joi = require("joi");
 const mongoose = require("mongoose");
 
 const VendorSchema = new mongoose.Schema({
-  active: { type: Boolean },
+  active: { type: Boolean ,default:false},
   name: {
     type: String,
-    minLength: 4,
-    maxLength: 1024,
   },
-  password: {
-    type: String,
-    minLength: 4,
-    maxLength: 1024,
-  },
-  email: {
-    type: String,
-  },
+
   shopName: {
     type: String,
   },
@@ -39,7 +30,11 @@ const VendorSchema = new mongoose.Schema({
   accName: { type: String },
   branch: { type: String },
   accNo: { type: String },
-  accepted:{type:Boolean,default:false}
+  accepted:{type:Boolean,default:false},
+  isRegistered:{
+    type:Boolean,
+    default:false
+  },
 });
 
 const Vendor = mongoose.model("vendor.app.users", VendorSchema);

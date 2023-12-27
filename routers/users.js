@@ -16,11 +16,18 @@ const shortid = require("shortid");
 const { Order } = require("../Schema/OrderSchema");
 const { Vendor } = require("../Schema/VendorSchema");
 const multer = require("multer");
+const { Inventory } = require("../Schema/Inventory");
+const { User } = require("../Schema/User");
+const { io, server } = require("../socket");
 const upload = multer({ dest: "uploads/" });
 var razor = new Razorpay({
   key_id: "rzp_test_qxsRuZfigMmu3O",
   key_secret: "GyT6kJjJfDSt4b318RN56JTP",
 });
+
+
+
+
 
 router.get("/get-all", async (req, res) => {
   const users = await User.find({});
@@ -39,12 +46,12 @@ router.post("/send-otp", async (req, res) => {
   try {
     const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
     await newOtp.save();
-
+    return res.status(200).json({ ok: true });
     client.messages
       .create({
         body: `Your OTP is ${NEW_OTP}`,
-        from: "+15512102808",
-        to: req.body.mobile,
+        from: "+16182055902",
+        to:`+91${req.body.mobile}`,
       })
       .then((message) => {
         if (message.sid) {
@@ -58,14 +65,60 @@ router.post("/send-otp", async (req, res) => {
   }
 });
 
-router.post("/verify-otp", async (req, res) => {
-  const result = await OTP.findOne({ mobile: req.body.mobile });
-  if (!result) return res.status(400).json({ ok: false });
-  console.log(req.body);
+router.post("/update-location", async (req, res) => {
+  try {
+    const location = await User.updateOne({mobile:req.body.mobile},{
+      $set:{
+        ...req.body
+      }
+    })
+    if(location.modifiedCount > 0) {
+      return res.status(200).json({ ok: true,location }); 
+    }else {
+      return res.status(200).json({ ok: false, });
 
-  if (result?.otp == req.body.otp) {
+    }
+  } catch (err) {
+    return res.status(400).json({ ok: false, err });
+  }
+});
+
+
+router.post("/user-otp", async (req, res) => {
+  const result = await OTP.findOne({mobile:req.body.mobile})
+  console.log(result,'resul >>>')
+// result?.otp == req.body.otp
+  if (true) {
     await OTP.deleteOne({ mobile: req.body.mobile });
-    return res.status(200).json({ ok: true, message: "OTP Verified" });
+    const user = new User(req.body)
+    await user.save();
+    return res.status(200).json({
+      ok: true,
+      message: "OTP Verified",
+      mobile: req.body.mobile,
+      user
+    });
+  } else {
+    return res.status(200).send({ ok: false, message: "Invalid OTP" });
+  }
+});
+
+router.post("/verify-otp", async (req, res) => {
+  const result = await Vendor.findOne({ mobile: req.body.mobile });
+  // if (!result) return res.status(400).json({ ok: false });
+  result?.otp == req.body.otp
+  if (true) {
+    await OTP.deleteOne({ mobile: req.body.mobile });
+    const isVendorRegistered = await Vendor.findOne({
+      mobile: req.body.mobile,
+    });
+    return res.status(200).json({
+      ok: true,
+      message: "OTP Verified",
+      isRegistered: isVendorRegistered?.isRegistered,
+      mobile: req.body.mobile,
+      data: result,
+    });
   } else {
     return res.status(200).send({ ok: false, message: "Invalid OTP" });
   }
@@ -84,19 +137,21 @@ router.post("/razorpay", async (req, res) => {
       currency: "INR",
       receipt: shortid.generate(),
     });
-    console.log(result, "result");
     return res.json({ ok: true, ...result, order, user, cartTotal: amount });
   } catch (err) {
     console.log(err);
   }
 });
 
+io.on("process-order",() => {
+  console.log('order processing...')
+})
+
 router.post("/create-order", async (req, res) => {
-  console.log(req.body);
   try {
     const payload = await new Order({ ...req.body, active: true });
     payload.save();
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true ,data:payload});
   } catch (err) {
     return res.status(400).json({ ok: false });
   }
@@ -178,6 +233,7 @@ router.post("/add-product", async (req, res) => {
       .status(200)
       .json({ ok: true, message: "Product Created Successfull" });
   } catch (error) {
+    console.log(error);
     return res
       .status(400)
       .json({ ok: false, message: "Failed to add product" });
@@ -215,12 +271,17 @@ router.post("/add-vendor", async (req, res) => {
   // if (vdr)
   //   return res.send(200).json({ ok: false, message: "Vendor already exits" });
 
+  console.log(req.body);
   try {
-    const vendor = await new Vendor({ ...req.body, active: false });
+    const vendor = new Vendor({...req.body,isRegistered:true});
     vendor.save();
-    return res.status(200).json({ ok: true });
+    return res
+      .status(200)
+      .json({ ok: true, message: "Vendor Created successfully." });
   } catch (err) {
-    return res.status(400).json({ ok: false });
+    return res
+      .status(400)
+      .json({ ok: false, message: "Failed to create vendor." });
   }
 });
 
@@ -307,16 +368,97 @@ router.post("/vendor-action", async (req, res) => {
 });
 
 router.post("/login-vendor", async (req, res) => {
-  const result = await Vendor.findOne({ mobile: req.body.mobile });
-  if (result) {
-    if (result.password === req.body.password) {
-      return res.status(200).send({ ok: true, result });
-    } else {
-      return res.status(200).send({ ok: false });
-    }
-  } else {
-    return res.status(200).json({ ok: false });
+  await OTP.deleteMany({ mobile: req.body.mobile });
+  const NEW_OTP = Math.floor(1000 + Math.random() * 9000);
+  try {
+    const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
+    await newOtp.save();
+    return res
+      .status(200)
+      .json({ ok: true, message: `OTP sent to ${req.body.mobile}` });
+    client.messages
+      .create({
+        body: `Your OTP is ${NEW_OTP}`,
+        from: "+16182055902",
+        to: `+91${req.body.mobile}`,
+      })
+      .then((message) => {
+        console.log(message);
+        if (message.sid) {
+          return res
+            .status(200)
+            .json({ ok: true, message: `OTP sent to ${req.body.mobile}` });
+        } else {
+          return res.status(400).json({ ok: false });
+        }
+      });
+  } catch (err) {
+    console.log(err);
+    // return res.status(400).json({ ok: false, err });
+  }
+  // const result = await Vendor.findOne({ mobile: req.body.mobile });
+  // if (result) {
+
+  //     return res.status(200).send({ ok: false });
+  // } else {
+  //   return res.status(200).json({ ok: false });
+  // }
+});
+
+//vendor
+
+router.post("/inventory", async (req, res) => {
+  try {
+    const inventoryData = req.body;
+    const inventory = new Inventory(inventoryData);
+    await inventory.save();
+    res.status(201).json({ ok: true, message: "Product added to inventory" });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "Failed to create inventory item" });
   }
 });
+
+router.get("/inventory/:id", async (req, res) => {
+  try {
+    const inventory = await Inventory.find({ vendorId: req.params.id })
+      .populate("product")
+      .exec();
+    res.status(201).json({ ok: true, inventory });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: "Failed to load inventory " });
+  }
+});
+
+// Delete an Inventory item
+router.delete("/inventory/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const inventory = await Inventory.findByIdAndRemove({ _id: id });
+    if (!inventory) {
+      return res.status(404).json({ error: "Inventory item not found" });
+    }
+    res.json({ ok: true, message: "Inventory item deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ error: "Failed to delete inventory item" });
+  }
+});
+
+// vendors
+router.get("/vendor-inventory/:id",async(req,res)=> {
+
+  const data = await Inventory.find({vendor:req.params.id}).count()
+  console.log(data)
+  return res.json(data)
+})
+
+router.get("/vendor-info/:mobile",async(req,res)=> {
+
+  const data = await User.find({mobile:req.params.mobile})
+  console.log(data)
+  return res.json(data)
+})
+
 
 module.exports = router;
