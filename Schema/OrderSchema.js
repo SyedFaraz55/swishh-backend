@@ -6,7 +6,8 @@ const OrderSchema = new mongoose.Schema({
   receipt: { type: String, required: true },
   order: { type: Array, required: true },
   user: { type: String, required: true },
-  cartTotal:{type:String,required:true}
+  cartTotal:{type:String,required:true},
+  location:{}
 });
 
 // const validateUser = (user) => {
