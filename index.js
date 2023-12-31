@@ -11,6 +11,7 @@ const { io, server,app } = require("./socket");
 const { Vendor } = require("./Schema/VendorSchema");
 const haversine = require("haversine");
 const { Track } = require("./Schema/trackOrder");
+const { Order } = require("./Schema/OrderSchema");
 const PORT = process.env.PORT || 5000;
 function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
   var R = 6371; // Radius of the earth in km
@@ -128,6 +129,25 @@ console.log(parsed.orderId,'order id>>> from reeecte')
    
 
 
+
+})
+
+socket.on("order-accepted",async(data)=> {
+  if(!data) return
+
+  let parsed = JSON.parse(data);
+  console.log(parsed,'parsed..')
+  await Track.deleteOne({orderId:parsed.orderId});
+
+  try {
+     await Order.updateOne({id:parsed.orderId},{
+      $set:{
+        assigne:parsed.assigne.mobile,
+      }
+    })
+  }catch(err) {
+    console.log(err.toString())
+  }
 
 })
 

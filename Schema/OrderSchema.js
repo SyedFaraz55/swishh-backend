@@ -8,7 +8,8 @@ const OrderSchema = new mongoose.Schema({
   user: { type: String, required: true },
   cartTotal:{type:Number,required:true},
   location:{},
-  completed:false
+  completed:false,
+  assigne:String
 });
 
 // const validateUser = (user) => {
