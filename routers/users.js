@@ -459,6 +459,19 @@ router.get("/vendor-info/:mobile",async(req,res)=> {
   console.log(data)
   return res.json(data)
 })
+// ADMIN
+router.get("/stats",async(req,res)=> {
+  const vendors = await Vendor.find().count();
+  const orders = await Order.find();
+  const sum = await Order.aggregate([
+    {$group:{
+      _id:null,
+      totalOrder:{$sum:1},
+      totalRevenue:{$sum:"$cartTotal"},
+    }}
+  ])
+  return res.status(200).json({vendors,stats:sum[0],orders})
 
+})
 
 module.exports = router;
