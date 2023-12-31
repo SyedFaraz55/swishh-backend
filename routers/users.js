@@ -453,6 +453,12 @@ router.get("/vendor-inventory/:id",async(req,res)=> {
   return res.json(data)
 })
 
+router.get("/my-orders/:mobile",async(req,res)=> {
+
+  const data = await Order.find({assigne:req.params.mobile})
+  return res.json(data)
+})
+
 router.get("/vendor-info/:mobile",async(req,res)=> {
 
   const data = await User.find({mobile:req.params.mobile})
