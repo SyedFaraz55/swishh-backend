@@ -9,7 +9,8 @@ const Users = new mongoose.Schema({
   },
   location:{},
   address:{},
-  lat_long:{}
+  lat_long:{},
+
 });
 
 

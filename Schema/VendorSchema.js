@@ -35,6 +35,8 @@ const VendorSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
+  orders_completed:{type:Number},
+  total_earnings:{type:Number}
 });
 
 const Vendor = mongoose.model("vendor.app.users", VendorSchema);
