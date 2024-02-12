@@ -9,7 +9,9 @@ const OrderSchema = new mongoose.Schema({
   cartTotal:{type:Number,required:true},
   location:{},
   completed:false,
-  assigne:String
+  assigne:String,
+  order_status:{type:String, default:"pending"},
+  otp:{type:Number}
 });
 
 // const validateUser = (user) => {

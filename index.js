@@ -143,6 +143,7 @@ socket.on("order-accepted",async(data)=> {
      await Order.updateOne({id:parsed.orderId},{
       $set:{
         assigne:parsed.assigne.mobile,
+        order_status:"accepted"
       }
     })
   }catch(err) {

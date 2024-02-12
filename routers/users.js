@@ -407,6 +407,24 @@ router.post("/login-vendor", async (req, res) => {
 
 //vendor
 
+router.get("/profile/:id",async(req,res)=> {
+  const profile = await Vendor.findById({_id:req.params.id});
+  res.send(profile)
+})
+
+router.post("/profile/status",async(req,res)=> {
+   try {
+    const record =await Vendor.updateOne({_id:req.body.id},{
+      $set:{
+        active: req.body.status
+      }
+    });
+    return res.json({ok:true, message:"Status updated"});
+   } catch(ex) {
+    return res.json({ok:false, message:"Failed to update status"});
+   }
+})
+
 router.post("/inventory", async (req, res) => {
   try {
     const inventoryData = req.body;
@@ -453,9 +471,32 @@ router.get("/vendor-inventory/:id",async(req,res)=> {
   return res.json(data)
 })
 
+router.post("/vendor/order-status",async(req,res)=> {
+  const assigne = await Order.findOne({_id:req.body.id});
+
+  console.log(assigne);
+  try {
+   const stat =  await Order.updateOne({_id:req.body.id},{
+      $set:{
+        order_status:"completed",
+        active: req.body.status
+      }
+    });
+    if(stat.modifiedCount > 0) {
+      await Vendor.updateOne({mobile:assigne.assigne},{
+        $inc:{orders_completed:1, total_earnings:assigne.cartTotal},
+      });
+      return res.json({ok:true, message:"order status updated successfully."});
+    }
+  
+  } catch(ex) {
+    return res.json({ok:false, message:"Failed to update order status."});
+  }
+})
+
 router.get("/my-orders/:mobile",async(req,res)=> {
 
-  const data = await Order.find({assigne:req.params.mobile})
+  const data = await Order.find({assigne:req.params.mobile});
   return res.json(data)
 })
 
