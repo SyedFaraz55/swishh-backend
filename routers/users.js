@@ -25,10 +25,6 @@ var razor = new Razorpay({
   key_secret: "GyT6kJjJfDSt4b318RN56JTP",
 });
 
-
-
-
-
 router.get("/get-all", async (req, res) => {
   const users = await User.find({});
   return res.status(200).json(users);
@@ -46,12 +42,12 @@ router.post("/send-otp", async (req, res) => {
   try {
     const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
     await newOtp.save();
-    return res.status(200).json({ ok: true });
+    // return res.status(200).json({ ok: true });
     client.messages
       .create({
         body: `Your OTP is ${NEW_OTP}`,
-        from: "+16182055902",
-        to:`+91${req.body.mobile}`,
+        from: process.env.MOBILE_NUMBER,
+        to: `+91${req.body.mobile}`,
       })
       .then((message) => {
         if (message.sid) {
@@ -67,36 +63,37 @@ router.post("/send-otp", async (req, res) => {
 
 router.post("/update-location", async (req, res) => {
   try {
-    const location = await User.updateOne({mobile:req.body.mobile},{
-      $set:{
-        ...req.body
-      }
-    })
-    if(location.modifiedCount > 0) {
-      return res.status(200).json({ ok: true,location }); 
-    }else {
-      return res.status(200).json({ ok: false, });
-
+    const location = await User.updateOne(
+      { mobile: req.body.mobile },
+      {
+        $set: {
+          ...req.body,
+        },
+      },
+    );
+    if (location.modifiedCount > 0) {
+      return res.status(200).json({ ok: true, location });
+    } else {
+      return res.status(200).json({ ok: false });
     }
   } catch (err) {
     return res.status(400).json({ ok: false, err });
   }
 });
 
-
 router.post("/user-otp", async (req, res) => {
-  const result = await OTP.findOne({mobile:req.body.mobile})
-  console.log(result,'resul >>>')
-// result?.otp == req.body.otp
+  const result = await OTP.findOne({ mobile: req.body.mobile });
+  console.log(result, "resul >>>");
+  // result?.otp == req.body.otp
   if (true) {
     await OTP.deleteOne({ mobile: req.body.mobile });
-    const user = new User(req.body)
+    const user = new User(req.body);
     await user.save();
     return res.status(200).json({
       ok: true,
       message: "OTP Verified",
       mobile: req.body.mobile,
-      user
+      user,
     });
   } else {
     return res.status(200).send({ ok: false, message: "Invalid OTP" });
@@ -105,9 +102,12 @@ router.post("/user-otp", async (req, res) => {
 
 router.post("/verify-otp", async (req, res) => {
   const result = await Vendor.findOne({ mobile: req.body.mobile });
-  // if (!result) return res.status(400).json({ ok: false });
-  result?.otp == req.body.otp
-  if (true) {
+  const verifiedOTP = await OTP.findOne({ mobile: req.body.mobile });
+  if (!result)
+    return res
+      .status(400)
+      .json({ ok: false, message: "Vendor Doesn't exits." });
+  if (verifiedOTP?.otp == req.body.otp) {
     await OTP.deleteOne({ mobile: req.body.mobile });
     const isVendorRegistered = await Vendor.findOne({
       mobile: req.body.mobile,
@@ -143,15 +143,15 @@ router.post("/razorpay", async (req, res) => {
   }
 });
 
-io.on("process-order",() => {
-  console.log('order processing...')
-})
+io.on("process-order", () => {
+  console.log("order processing...");
+});
 
 router.post("/create-order", async (req, res) => {
   try {
     const payload = await new Order({ ...req.body, active: true });
     payload.save();
-    return res.status(200).json({ ok: true ,data:payload});
+    return res.status(200).json({ ok: true, data: payload });
   } catch (err) {
     return res.status(400).json({ ok: false });
   }
@@ -219,7 +219,7 @@ router.post(
     }
 
     return res.json({ ok: true, data: rest });
-  }
+  },
 );
 
 router.post("/add-product", async (req, res) => {
@@ -273,7 +273,7 @@ router.post("/add-vendor", async (req, res) => {
 
   console.log(req.body);
   try {
-    const vendor = new Vendor({...req.body,isRegistered:true});
+    const vendor = new Vendor({ ...req.body, isRegistered: true });
     vendor.save();
     return res
       .status(200)
@@ -292,7 +292,7 @@ router.post("/activate-vendor", async (req, res) => {
       $set: {
         active: req.body.payload,
       },
-    }
+    },
   );
   if (vendor.matchedCount > 0 || vendor.acknowledged) {
     return res.status(200).json({ ok: true, message: "Status Changed" });
@@ -356,7 +356,7 @@ router.post("/vendor-action", async (req, res) => {
         accepted: req.body.payload,
         active: req.body.payload ? true : false,
       },
-    }
+    },
   );
   if (vendor.matchedCount > 0 || vendor.acknowledged) {
     return res.status(200).json({ ok: true, message: "Status Changed" });
@@ -373,13 +373,10 @@ router.post("/login-vendor", async (req, res) => {
   try {
     const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
     await newOtp.save();
-    return res
-      .status(200)
-      .json({ ok: true, message: `OTP sent to ${req.body.mobile}` });
     client.messages
       .create({
-        body: `Your OTP is ${NEW_OTP}`,
-        from: "+16182055902",
+        body: `Swishh - Your OTP is ${NEW_OTP}`,
+        from: process.env.MOBILE_NUMBER,
         to: `+91${req.body.mobile}`,
       })
       .then((message) => {
@@ -407,23 +404,26 @@ router.post("/login-vendor", async (req, res) => {
 
 //vendor
 
-router.get("/profile/:id",async(req,res)=> {
-  const profile = await Vendor.findById({_id:req.params.id});
-  res.send(profile)
-})
+router.get("/profile/:id", async (req, res) => {
+  const profile = await Vendor.findById({ _id: req.params.id });
+  res.send(profile);
+});
 
-router.post("/profile/status",async(req,res)=> {
-   try {
-    const record =await Vendor.updateOne({_id:req.body.id},{
-      $set:{
-        active: req.body.status
-      }
-    });
-    return res.json({ok:true, message:"Status updated"});
-   } catch(ex) {
-    return res.json({ok:false, message:"Failed to update status"});
-   }
-})
+router.post("/profile/status", async (req, res) => {
+  try {
+    const record = await Vendor.updateOne(
+      { _id: req.body.id },
+      {
+        $set: {
+          active: req.body.status,
+        },
+      },
+    );
+    return res.json({ ok: true, message: "Status updated" });
+  } catch (ex) {
+    return res.json({ ok: false, message: "Failed to update status" });
+  }
+});
 
 router.post("/inventory", async (req, res) => {
   try {
@@ -464,61 +464,67 @@ router.delete("/inventory/:id", async (req, res) => {
 });
 
 // vendors
-router.get("/vendor-inventory/:id",async(req,res)=> {
+router.get("/vendor-inventory/:id", async (req, res) => {
+  const data = await Inventory.find({ vendor: req.params.id }).count();
+  console.log(data);
+  return res.json(data);
+});
 
-  const data = await Inventory.find({vendor:req.params.id}).count()
-  console.log(data)
-  return res.json(data)
-})
-
-router.post("/vendor/order-status",async(req,res)=> {
-  const assigne = await Order.findOne({_id:req.body.id});
+router.post("/vendor/order-status", async (req, res) => {
+  const assigne = await Order.findOne({ _id: req.body.id });
 
   console.log(assigne);
   try {
-   const stat =  await Order.updateOne({_id:req.body.id},{
-      $set:{
-        order_status:"completed",
-        active: req.body.status
-      }
-    });
-    if(stat.modifiedCount > 0) {
-      await Vendor.updateOne({mobile:assigne.assigne},{
-        $inc:{orders_completed:1, total_earnings:assigne.cartTotal},
+    const stat = await Order.updateOne(
+      { _id: req.body.id },
+      {
+        $set: {
+          order_status: "completed",
+          active: req.body.status,
+        },
+      },
+    );
+    if (stat.modifiedCount > 0) {
+      await Vendor.updateOne(
+        { mobile: assigne.assigne },
+        {
+          $inc: { orders_completed: 1, total_earnings: assigne.cartTotal },
+        },
+      );
+      return res.json({
+        ok: true,
+        message: "order status updated successfully.",
       });
-      return res.json({ok:true, message:"order status updated successfully."});
     }
-  
-  } catch(ex) {
-    return res.json({ok:false, message:"Failed to update order status."});
+  } catch (ex) {
+    return res.json({ ok: false, message: "Failed to update order status." });
   }
-})
+});
 
-router.get("/my-orders/:mobile",async(req,res)=> {
+router.get("/my-orders/:mobile", async (req, res) => {
+  const data = await Order.find({ assigne: req.params.mobile });
+  return res.json(data);
+});
 
-  const data = await Order.find({assigne:req.params.mobile});
-  return res.json(data)
-})
-
-router.get("/vendor-info/:mobile",async(req,res)=> {
-
-  const data = await User.find({mobile:req.params.mobile})
-  console.log(data)
-  return res.json(data)
-})
+router.get("/vendor-info/:mobile", async (req, res) => {
+  const data = await User.find({ mobile: req.params.mobile });
+  console.log(data);
+  return res.json(data);
+});
 // ADMIN
-router.get("/stats",async(req,res)=> {
+router.get("/stats", async (req, res) => {
   const vendors = await Vendor.find().count();
   const orders = await Order.find();
   const sum = await Order.aggregate([
-    {$group:{
-      _id:null,
-      totalOrder:{$sum:1},
-      totalRevenue:{$sum:"$cartTotal"},
-    }}
-  ])
-  return res.status(200).json({vendors,stats:sum[0],orders})
-
-})
+    {
+      $group: {
+        _id: null,
+        totalOrder: { $sum: 1 },
+        totalRevenue: { $sum: "$cartTotal" },
+      },
+    },
+  ]);
+  return res.status(200).json({ vendors, stats: sum[0], orders });
+});
 
 module.exports = router;
