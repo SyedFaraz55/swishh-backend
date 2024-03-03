@@ -101,7 +101,7 @@ router.post("/user-otp", async (req, res) => {
 });
 
 router.post("/verify-otp", async (req, res) => {
-  // const result = await Vendor.findOne({ mobile: req.body.mobile });
+  const result = await Vendor.findOne({ mobile: req.body.mobile });
   const verifiedOTP = await OTP.findOne({ mobile: req.body.mobile });
   // if (!result)
   //   return res
