@@ -103,12 +103,8 @@ router.post("/user-otp", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   const result = await Vendor.findOne({ mobile: req.body.mobile });
   const verifiedOTP = await OTP.findOne({ mobile: req.body.mobile });
-  // if (!result)
-  //   return res
-  //     .status(400)
-  //     .json({ ok: false, message: "Vendor Doesn't exits." });
-      // verifiedOTP?.otp == req.body.otp
-  if (true) {
+
+  if (verifiedOTP?.otp == req.body.otp) {
     await OTP.deleteOne({ mobile: req.body.mobile });
     const isVendorRegistered = await Vendor.findOne({
       mobile: req.body.mobile,
@@ -371,11 +367,7 @@ router.post("/vendor-action", async (req, res) => {
 router.post("/login-vendor", async (req, res) => {
   await OTP.deleteMany({ mobile: req.body.mobile });
   const NEW_OTP = Math.floor(1000 + Math.random() * 9000);
-  const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
-  await newOtp.save();
-  return res
-  .status(200)
-  .json({ ok: true, message: `OTP sent to ${req.body.mobile}` }); 
+
   try {
     const newOtp = new OTP({ mobile: req.body.mobile, otp: NEW_OTP });
     await newOtp.save();
@@ -394,7 +386,7 @@ router.post("/login-vendor", async (req, res) => {
         } else {
           return res.status(400).json({ ok: false });
         }
-      });
+      }).catch(err => console.log(err))
   } catch (err) {
     console.log(err);
     // return res.status(400).json({ ok: false, err });
