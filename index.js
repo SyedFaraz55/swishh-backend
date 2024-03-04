@@ -183,6 +183,13 @@ app.get("/menu", async (req, res) => {
   return res.status(200).json({ ok: true });
 });
 
+app.get("/api/health", async (req,res)=> {
+  return res.json({
+    "ok": true,
+    "message": "server is up and running..."
+  })
+})
+
 app.get('/emit',()=>   io.emit('orderProcessed', "1224"));
 
 server.listen(PORT, () => console.log(`@server running at port ${PORT}`));
