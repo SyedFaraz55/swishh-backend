@@ -84,8 +84,7 @@ router.post("/update-location", async (req, res) => {
 router.post("/user-otp", async (req, res) => {
   const result = await OTP.findOne({ mobile: req.body.mobile });
   console.log(result, "resul >>>");
-  // result?.otp == req.body.otp
-  if (true) {
+  if (result?.otp == req.body.otp) {
     await OTP.deleteOne({ mobile: req.body.mobile });
     const user = new User(req.body);
     await user.save();
